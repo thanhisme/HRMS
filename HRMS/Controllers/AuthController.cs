@@ -89,7 +89,8 @@ namespace HRMS.Controllers
         [AnonymousOnly]
         public async Task<ActionResult<HttpResponse<bool>>> GenerateResetPasswordToken([FromBody] GenerateResetPasswordTokenRequest req)
         {
-            await _authService.GenerateResetPasswordToken(req);
+            var domain = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+            await _authService.GenerateResetPasswordToken(req, domain);
 
             return SuccessResponse(true);
         }

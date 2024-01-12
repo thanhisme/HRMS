@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
+using Infrastructure.Models.MailModels;
 using Infrastructure.Models.RequestModels.Auth;
 using Infrastructure.Models.ResponseModels.Auth;
 using Infrastructure.Services.Interfaces;
@@ -33,11 +34,14 @@ namespace Infrastructure.Services.Implementations
 
         private readonly string _secretKey;
 
+        private static IMailService _mailService;
+
         public AuthService(
             IUnitOfWork unitOfWork,
             IMemoryCache memoryCache,
             IMapper mapper,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IMailService mailService
         ) : base(unitOfWork, memoryCache, mapper)
         {
             _userDbSet = unitOfWork.Repository<User>();
@@ -45,6 +49,7 @@ namespace Infrastructure.Services.Implementations
             _blackListTokenDbSet = unitOfWork.Repository<BlackListToken>();
             _accountDbSet = unitOfWork.Repository<Account>();
             _secretKey = configuration.GetSection("AppSetting:JwtSecretKey").Value ?? "";
+            _mailService = mailService;
         }
 
         #region Sign up
@@ -231,7 +236,7 @@ namespace Infrastructure.Services.Implementations
         #region Reset password
 
         #region Generate reset password token
-        public async Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest req)
+        public async Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest req, string domain)
         {
             var account = _accountDbSet
                 .Include(a => a.User)
@@ -245,9 +250,24 @@ namespace Infrastructure.Services.Implementations
                 );
             }
 
-            account.ResetPasswordToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            var resetPasswordToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            account.ResetPasswordToken = resetPasswordToken;
             account.ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
 
+            var mailRequest = new MailRequest
+            {
+                Receiver = account.Email,
+                Subject = "Reset password",
+                Body = $"<p>Hi {account.User.FullName},</p>" +
+                    $"<p>Please click the link below to reset your password:</p>" +
+                    $"<p><a href=\"{domain}/reset-password?token={resetPasswordToken}\">Reset password</a></p>" +
+                    $"<p>If you did not request this, please ignore this email.</p>" +
+                    $"<p>Thanks,</p>" +
+                    $"<p>HRMS Team</p>"
+            };
+
+            await _mailService.SendEmailAsync(mailRequest);
             await _unitOfWork.SaveChangesAsync();
         }
         #endregion

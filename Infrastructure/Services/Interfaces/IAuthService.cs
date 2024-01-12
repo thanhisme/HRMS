@@ -23,7 +23,7 @@ namespace Infrastructure.Services.Interfaces
 
         public Task AddAccessToken2BlackList(string token);
 
-        public Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest email);
+        public Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest email, string domain);
 
         public Task<Account> VerifyResetPasswordToken(string token);
 

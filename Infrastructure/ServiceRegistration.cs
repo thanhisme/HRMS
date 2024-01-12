@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Entities;
 using Infrastructure.AutoMapper;
+using Infrastructure.Models.MailModels;
 using Infrastructure.Services.Implementations;
 using Infrastructure.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,8 @@ namespace Infrastructure
                 )
             );
 
+            services.Configure<MailSettings>(configuration.GetSection("SmtpSettings"));
+
             services.AddTransient<DbContext, HrmsContext>();
 
             services.AddMemoryCache();
@@ -45,6 +48,7 @@ namespace Infrastructure
         {
             services.AddTransient<IAuthService, AuthService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IMailService, MailService>();
             //services.AddTransient<IFileService, FileService>();
 
             return services;
