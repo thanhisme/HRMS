@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Entities\Entities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="AutoMapper\ListPermissionsResolver.cs" />
+    <Compile Remove="AutoMapper\PermissionGroupResolver.cs" />
+    <Compile Remove="Services\Interfaces\IProjectService.cs" />
+    <Compile Remove="Services\Interfaces\IDepartmentService.cs" />
+    <Compile Remove="Services\Interfaces\IPermissionGroupService.cs" />
+    <Compile Remove="Services\Interfaces\IPermissionService.cs" />
+    <Compile Remove="Services\Interfaces\IPositionService.cs" />
+    <Compile Remove="Services\Implementations\DepartmentService.cs" />
+    <Compile Remove="Services\Implementations\PermissionGroupService.cs" />
+  </ItemGroup>
+
+</Project>

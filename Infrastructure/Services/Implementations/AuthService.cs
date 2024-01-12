@@ -1,0 +1,254 @@
+﻿using AutoMapper;
+using Entities;
+using Infrastructure.Models.RequestModels.Auth;
+using Infrastructure.Models.ResponseModels.Auth;
+using Infrastructure.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using Utils.Constants.Strings;
+using Utils.HelperFuncs;
+using Utils.HttpResponseModels;
+using Utils.UnitOfWork.Interfaces;
+
+namespace Infrastructure.Services.Implementations
+{
+    public class AuthService : BaseService, IAuthService
+    {
+        private const string COMPANY_DOMAIN = "namphuongso.com";
+
+        private readonly DbSet<User> _userDbSet;
+
+        private readonly DbSet<RefreshToken> _refreshTokenDbSet;
+
+        private readonly DbSet<BlackListToken> _blackListTokenDbSet;
+
+        private readonly DbSet<Account> _accountDbSet;
+
+        private readonly string _secretKey;
+
+        public AuthService(
+            IUnitOfWork unitOfWork,
+            IMemoryCache memoryCache,
+            IMapper mapper,
+            IConfiguration configuration
+        ) : base(unitOfWork, memoryCache, mapper)
+        {
+            _userDbSet = unitOfWork.Repository<User>();
+            _refreshTokenDbSet = unitOfWork.Repository<RefreshToken>();
+            _blackListTokenDbSet = unitOfWork.Repository<BlackListToken>();
+            _accountDbSet = unitOfWork.Repository<Account>();
+            _secretKey = configuration.GetSection("AppSetting:JwtSecretKey").Value ?? "";
+        }
+
+        #region Sign up
+        public async Task<Guid> SignUp(Dictionary<string, dynamic> req)
+        {
+            var user = new User();
+
+            ObjectMapper.Mapping(req, user);
+
+            var account = new Account
+            {
+                Email = user.Email,
+                // change the default password after the prefix
+                Password = MD5Algorithm.HashMd5(Account.FIRST_PASSWORD_PREFIX + "123456"),
+                User = user
+            };
+
+            _userDbSet.Add(user);
+            _accountDbSet.Add(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            return user.Id;
+        }
+        #endregion
+
+        #region Sign in
+        public async Task<(string, RefreshToken)> SignIn(
+            SignInRequest req,
+            string ipAddress
+        )
+        {
+            var hashedPassword = MD5Algorithm.HashMd5(req.Password);
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a =>
+                    a.Email == req.Username + "@" + COMPANY_DOMAIN &&
+                    !a.IsDeleted &&
+                    a.State == Account.ACTIVATED
+                );
+
+            if (account == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_USERNAME_OR_PASSWORD
+                );
+            }
+
+            if (!MD5Algorithm.VerifyMd5Hash(req.Password, account.Password))
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_USERNAME_OR_PASSWORD
+                );
+            }
+
+            var user = account.User;
+            if (user == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_USERNAME_OR_PASSWORD
+                );
+            }
+
+            List<Claim> claims = new()
+            {
+                new Claim(ClaimTypes.Sid, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim(
+                    JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64
+                ),
+                new Claim(ClaimTypes.Name, user.FullName)
+            };
+
+            var accessToken = Jwt.GenerateToken(claims, _secretKey);
+            var refreshToken = GenerateRefreshToken(user, ipAddress);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return (accessToken, refreshToken);
+        }
+        #endregion
+
+        #region Sign out
+        public async Task SignOut(
+            string? refreshToken,
+            string accessToken,
+            string ipAddress
+        )
+        {
+            RevokeRefreshToken(refreshToken!, ipAddress);
+            AddAccessToken2BlackList(accessToken);
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Refresh tokens
+        public async Task<(string, RefreshToken)?> Refresh2TokenTypes(
+            string? refreshToken,
+            string ipAddress
+        )
+        {
+            if (refreshToken == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_REFRESH_TOKEN
+                );
+            }
+
+            var token = _refreshTokenDbSet
+                .Include(rt => rt.User)
+                .FirstOrDefault(
+                    rt => rt.Token == refreshToken && rt.RevokedAt != null && rt.Expiry > DateTime.UtcNow
+                );
+
+            if (token == null || token.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_REFRESH_TOKEN
+                );
+            }
+
+            List<Claim> claims = new()
+            {
+                new Claim(ClaimTypes.Sid, token.User!.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin")
+            };
+
+            var newAccessToken = Jwt.GenerateToken(claims, _secretKey);
+            var newRefreshToken = GenerateRefreshToken(token.User, ipAddress);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return (newAccessToken, newRefreshToken);
+        }
+        #endregion
+
+        #region Helpers
+        public bool IsTokenInBlackList(string token)
+        {
+            var blToken = _blackListTokenDbSet.FirstOrDefault(_blToken => _blToken.Token == token);
+
+            return blToken != null;
+        }
+
+        private void RevokeRefreshToken(string token, string ipAddress)
+        {
+            var refreshToken = _refreshTokenDbSet.FirstOrDefault(rt => rt.Token == token);
+
+            if (refreshToken == null)
+            {
+                return;
+            }
+
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedByIp = ipAddress;
+        }
+
+        private RefreshToken GenerateRefreshToken(User user, string ipAddress)
+        {
+            var refreshToken = new RefreshToken()
+            {
+                User = user,
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                Expiry = DateTime.Now.AddMonths(1),
+                CreatedByIp = ipAddress
+            };
+
+            _refreshTokenDbSet.Add(refreshToken);
+
+            return refreshToken;
+        }
+
+        private void AddAccessToken2BlackList(string token)
+        {
+            var blackListToken = new BlackListToken
+            {
+                Token = token,
+                Expiry = Jwt.GetTokenExpiry(token)
+            };
+
+            _blackListTokenDbSet.Add(blackListToken);
+        }
+
+        private async Task<GoogleProfile> GetGoogleProfile(string token)
+        {
+            var httpClient = new HttpClient();
+            var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                "https://www.googleapis.com/oauth2/v2/userinfo"
+            );
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await httpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<GoogleProfile>(content);
+        }
+        #endregion
+    }
+}
