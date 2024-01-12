@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
+using Infrastructure.Models.MailModels;
 using Infrastructure.Models.RequestModels.Auth;
 using Infrastructure.Models.ResponseModels.Auth;
 using Infrastructure.Services.Interfaces;
@@ -33,11 +34,14 @@ namespace Infrastructure.Services.Implementations
 
         private readonly string _secretKey;
 
+        private static IMailService _mailService;
+
         public AuthService(
             IUnitOfWork unitOfWork,
             IMemoryCache memoryCache,
             IMapper mapper,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IMailService mailService
         ) : base(unitOfWork, memoryCache, mapper)
         {
             _userDbSet = unitOfWork.Repository<User>();
@@ -45,6 +49,7 @@ namespace Infrastructure.Services.Implementations
             _blackListTokenDbSet = unitOfWork.Repository<BlackListToken>();
             _accountDbSet = unitOfWork.Repository<Account>();
             _secretKey = configuration.GetSection("AppSetting:JwtSecretKey").Value ?? "";
+            _mailService = mailService;
         }
 
         #region Sign up
@@ -225,6 +230,138 @@ namespace Infrastructure.Services.Implementations
             account.UpdatedDate = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Reset password
+
+        #region Generate reset password token
+        public async Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest req, string domain)
+        {
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == req.Email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            var resetPasswordToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            account.ResetPasswordToken = resetPasswordToken;
+            account.ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+
+            var mailRequest = new MailRequest
+            {
+                Receiver = account.Email,
+                Subject = "Reset password",
+                Body = $"<p>Hi {account.User.FullName},</p>" +
+                    $"<p>Please click the link below to reset your password:</p>" +
+                    $"<p><a href=\"{domain}/reset-password?token={resetPasswordToken}\">Reset password</a></p>" +
+                    $"<p>If you did not request this, please ignore this email.</p>" +
+                    $"<p>Thanks,</p>" +
+                    $"<p>HRMS Team</p>"
+            };
+
+            await _mailService.SendEmailAsync(mailRequest);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Validate reset password token
+        public async Task<Account> VerifyResetPasswordToken(string token)
+        {
+            var account = await _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.ResetPasswordToken == token);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_RESET_PASSWORD_TOKEN
+                );
+            }
+
+            if (account.ResetPasswordTokenExpiresAt < DateTime.UtcNow)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.RESET_PASSWORD_TOKEN_EXPIRED
+                );
+            }
+
+            return account;
+        }
+        #endregion
+
+        #region Reset password
+        public async Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req)
+        {
+            var account = await VerifyResetPasswordToken(resetPasswordToken);
+
+            if (req.NewPassword != req.PasswordConfirm)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_CONFIRM_IS_NOT_MATCH
+                );
+            }
+
+            account.Password = MD5Algorithm.HashMd5(req.NewPassword);
+            account.PasswordChangedAt = DateTime.UtcNow;
+            account.ResetPasswordToken = null;
+            account.ResetPasswordTokenExpiresAt = null;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #endregion
+
+        #region Oauth google
+        public async Task<(string, RefreshToken)> OAuthGoogle(
+            string token,
+            string ipAddress
+        )
+        {
+            var googleProfile = await GetGoogleProfile(token);
+
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == googleProfile.email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            List<Claim> claims = new()
+            {
+                new Claim(ClaimTypes.Sid, account.User.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim(
+                    JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64
+                ),
+                new Claim(ClaimTypes.Name, account.User.FullName)
+            };
+
+            var accessToken = Jwt.GenerateToken(claims, _secretKey);
+            var refreshToken = GenerateRefreshToken(account.User, ipAddress);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return (accessToken, refreshToken);
         }
         #endregion
 

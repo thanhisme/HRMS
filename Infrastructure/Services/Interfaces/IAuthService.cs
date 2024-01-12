@@ -22,5 +22,13 @@ namespace Infrastructure.Services.Interfaces
         public Task RevokeRefreshToken(string token, string ipAddress);
 
         public Task AddAccessToken2BlackList(string token);
+
+        public Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest email, string domain);
+
+        public Task<Account> VerifyResetPasswordToken(string token);
+
+        public Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req);
+
+        public Task<(string, RefreshToken)> OAuthGoogle(string token, string ipAddress);
     }
 }

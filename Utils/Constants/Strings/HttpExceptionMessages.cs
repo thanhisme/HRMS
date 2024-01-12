@@ -27,5 +27,11 @@
         public static string PASSWORD_HAS_CHANGED { get; } = "Password has recently changed! Please sign in again!";
 
         public static string PASSWORD_CONFIRM_IS_NOT_MATCH { get; } = "Password confirm is not match";
+
+        public static string INVALID_EMAIL { get; } = "Invalid email";
+
+        public static string RESET_PASSWORD_TOKEN_EXPIRED { get; } = "Reset password token expired";
+
+        public static string INVALID_RESET_PASSWORD_TOKEN { get; } = "Invalid reset password token";
     }
 }
