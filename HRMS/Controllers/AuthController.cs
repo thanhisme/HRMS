@@ -4,6 +4,7 @@ using Infrastructure.Models.ResponseModels.Auth;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Utils.Annotations.Authorization;
 using Utils.HelperFuncs;
 using Utils.HttpResponseModels;
@@ -70,6 +71,15 @@ namespace HRMS.Controllers
             string accessToken = bearerToken["Bearer ".Length..];
 
             await _authService.SignOut(refreshToken, accessToken, accessToken);
+
+            return SuccessResponse(true);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult<HttpResponse<bool>>> ChangePassword(ChangePasswordRequest req)
+        {
+            await _authService.ChangePassword(Guid.Parse(User.FindFirst(ClaimTypes.Sid).Value), req);
 
             return SuccessResponse(true);
         }

@@ -24,9 +24,11 @@ app.UseCors(x => x
     .SetIsOriginAllowed(origin => true) // allow any origin
     .AllowCredentials());
 
+app.UseRouting();
+
 app.UseMiddleware<GlobalExceptionHandler>();
 
-app.UseMiddleware<CheckTokenInBlackList>();
+app.UseMiddleware<ProtectedMiddleware>();
 
 app.UseAuthentication();
 

@@ -138,10 +138,8 @@ namespace Infrastructure.Services.Implementations
             string ipAddress
         )
         {
-            RevokeRefreshToken(refreshToken!, ipAddress);
-            AddAccessToken2BlackList(accessToken);
-
-            await _unitOfWork.SaveChangesAsync();
+            await RevokeRefreshToken(refreshToken!, ipAddress);
+            await AddAccessToken2BlackList(accessToken);
         }
         #endregion
 
@@ -162,7 +160,7 @@ namespace Infrastructure.Services.Implementations
             var token = _refreshTokenDbSet
                 .Include(rt => rt.User)
                 .FirstOrDefault(
-                    rt => rt.Token == refreshToken && rt.RevokedAt != null && rt.Expiry > DateTime.UtcNow
+                    rt => rt.Token == refreshToken && rt.RevokedAt == null && rt.Expiry > DateTime.UtcNow
                 );
 
             if (token == null || token.User == null)
@@ -188,6 +186,48 @@ namespace Infrastructure.Services.Implementations
         }
         #endregion
 
+        #region Change password
+        public async Task ChangePassword(
+            Guid currentUserId,
+            ChangePasswordRequest req
+        )
+        {
+            if (req.NewPassword != req.PasswordConfirm)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_CONFIRM_IS_NOT_MATCH
+                );
+            }
+
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.User.Id == currentUserId);
+
+            if (account == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.InternalServerError,
+                    HttpExceptionMessages.INTERNAL_SERVER_ERROR
+                );
+            }
+
+            if (!MD5Algorithm.VerifyMd5Hash(req.OldPassword, account.Password))
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_IS_NOT_CORRECT
+                );
+            }
+
+            account.Password = MD5Algorithm.HashMd5(req.NewPassword);
+            account.PasswordChangedAt = DateTime.UtcNow;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
         #region Helpers
         public bool IsTokenInBlackList(string token)
         {
@@ -196,7 +236,31 @@ namespace Infrastructure.Services.Implementations
             return blToken != null;
         }
 
-        private void RevokeRefreshToken(string token, string ipAddress)
+        public bool IsPasswordChangedAfterTokenIssued(string token)
+        {
+            try
+            {
+                var jwt = new JwtSecurityToken(token);
+                var userId = Guid.Parse(jwt.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
+                var account = _accountDbSet.FirstOrDefault(a => a.User.Id == userId);
+
+                if (account == null)
+                {
+                    throw new AppException(
+                        HttpStatusCode.InternalServerError,
+                        HttpExceptionMessages.INTERNAL_SERVER_ERROR
+                    );
+                }
+
+                return account.PasswordChangedAt > jwt.IssuedAt;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task RevokeRefreshToken(string token, string ipAddress)
         {
             var refreshToken = _refreshTokenDbSet.FirstOrDefault(rt => rt.Token == token);
 
@@ -207,6 +271,8 @@ namespace Infrastructure.Services.Implementations
 
             refreshToken.RevokedAt = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
+
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private RefreshToken GenerateRefreshToken(User user, string ipAddress)
@@ -224,7 +290,7 @@ namespace Infrastructure.Services.Implementations
             return refreshToken;
         }
 
-        private void AddAccessToken2BlackList(string token)
+        public async Task AddAccessToken2BlackList(string token)
         {
             var blackListToken = new BlackListToken
             {
@@ -233,6 +299,7 @@ namespace Infrastructure.Services.Implementations
             };
 
             _blackListTokenDbSet.Add(blackListToken);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private async Task<GoogleProfile> GetGoogleProfile(string token)

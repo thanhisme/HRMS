@@ -13,6 +13,14 @@ namespace Infrastructure.Services.Interfaces
 
         public Task SignOut(string? refreshToken, string accessToken, string ipAddress);
 
+        public Task ChangePassword(Guid currentUserId, ChangePasswordRequest req);
+
         public bool IsTokenInBlackList(string token);
+
+        public bool IsPasswordChangedAfterTokenIssued(string token);
+
+        public Task RevokeRefreshToken(string token, string ipAddress);
+
+        public Task AddAccessToken2BlackList(string token);
     }
 }
