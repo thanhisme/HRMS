@@ -45,6 +45,18 @@ namespace HRMS.Controllers
             return SuccessResponse(response);
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<TokensResponse>>> OAuthGoogle([FromBody] OAuthRequest req)
+        {
+            var (accessToken, refreshToken) = await _authService.OAuthGoogle(req.Token, GetIpAddress());
+            var userAgent = GetUserAgent();
+            var response = HandleResponseBasedOnDevice(userAgent, accessToken, refreshToken);
+
+            return SuccessResponse(response);
+        }
+
         [HttpGet]
         [AllowAnonymous]
         [AnonymousOnly]

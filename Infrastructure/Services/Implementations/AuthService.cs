@@ -324,6 +324,47 @@ namespace Infrastructure.Services.Implementations
 
         #endregion
 
+        #region Oauth google
+        public async Task<(string, RefreshToken)> OAuthGoogle(
+            string token,
+            string ipAddress
+        )
+        {
+            var googleProfile = await GetGoogleProfile(token);
+
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == googleProfile.email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            List<Claim> claims = new()
+            {
+                new Claim(ClaimTypes.Sid, account.User.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim(
+                    JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64
+                ),
+                new Claim(ClaimTypes.Name, account.User.FullName)
+            };
+
+            var accessToken = Jwt.GenerateToken(claims, _secretKey);
+            var refreshToken = GenerateRefreshToken(account.User, ipAddress);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return (accessToken, refreshToken);
+        }
+        #endregion
+
         #region Helpers
         public bool IsTokenInBlackList(string token)
         {
