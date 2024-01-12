@@ -26,5 +26,7 @@ public class Account : BaseEntity
 
     public string? ResetPasswordToken { get; set; } = null;
 
+    public DateTime? ResetPasswordTokenExpiresAt { get; set; } = null;
+
     public string State { get; set; } = ACTIVATED;
 }
