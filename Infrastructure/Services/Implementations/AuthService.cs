@@ -228,6 +228,82 @@ namespace Infrastructure.Services.Implementations
         }
         #endregion
 
+        #region Reset password
+
+        #region Generate reset password token
+        public async Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest req)
+        {
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == req.Email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            account.ResetPasswordToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            account.ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Validate reset password token
+        public async Task<Account> VerifyResetPasswordToken(string token)
+        {
+            var account = await _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.ResetPasswordToken == token);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_RESET_PASSWORD_TOKEN
+                );
+            }
+
+            if (account.ResetPasswordTokenExpiresAt < DateTime.UtcNow)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.RESET_PASSWORD_TOKEN_EXPIRED
+                );
+            }
+
+            return account;
+        }
+        #endregion
+
+        #region Reset password
+        public async Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req)
+        {
+            var account = await VerifyResetPasswordToken(resetPasswordToken);
+
+            if (req.NewPassword != req.PasswordConfirm)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_CONFIRM_IS_NOT_MATCH
+                );
+            }
+
+            account.Password = MD5Algorithm.HashMd5(req.NewPassword);
+            account.PasswordChangedAt = DateTime.UtcNow;
+            account.ResetPasswordToken = null;
+            account.ResetPasswordTokenExpiresAt = null;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #endregion
+
         #region Helpers
         public bool IsTokenInBlackList(string token)
         {

@@ -84,6 +84,36 @@ namespace HRMS.Controllers
             return SuccessResponse(true);
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> GenerateResetPasswordToken([FromBody] GenerateResetPasswordTokenRequest req)
+        {
+            await _authService.GenerateResetPasswordToken(req);
+
+            return SuccessResponse(true);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> VerifyResetPasswordToken([FromQuery] string token)
+        {
+            var account = await _authService.VerifyResetPasswordToken(token);
+
+            return SuccessResponse(account != null);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> ResetPassword([FromQuery] string token, ResetPasswordRequest req)
+        {
+            await _authService.ResetPassword(token, req);
+
+            return SuccessResponse(true);
+        }
+
         #region Helpers
         private string GetIpAddress()
         {
