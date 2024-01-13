@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
+using Infrastructure.Models.MailModels;
 using Infrastructure.Models.RequestModels.Auth;
 using Infrastructure.Models.ResponseModels.Auth;
 using Infrastructure.Services.Interfaces;
@@ -33,11 +34,14 @@ namespace Infrastructure.Services.Implementations
 
         private readonly string _secretKey;
 
+        private static IMailService _mailService;
+
         public AuthService(
             IUnitOfWork unitOfWork,
             IMemoryCache memoryCache,
             IMapper mapper,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IMailService mailService
         ) : base(unitOfWork, memoryCache, mapper)
         {
             _userDbSet = unitOfWork.Repository<User>();
@@ -45,6 +49,7 @@ namespace Infrastructure.Services.Implementations
             _blackListTokenDbSet = unitOfWork.Repository<BlackListToken>();
             _accountDbSet = unitOfWork.Repository<Account>();
             _secretKey = configuration.GetSection("AppSetting:JwtSecretKey").Value ?? "";
+            _mailService = mailService;
         }
 
         #region Sign up
@@ -138,10 +143,8 @@ namespace Infrastructure.Services.Implementations
             string ipAddress
         )
         {
-            RevokeRefreshToken(refreshToken!, ipAddress);
-            AddAccessToken2BlackList(accessToken);
-
-            await _unitOfWork.SaveChangesAsync();
+            await RevokeRefreshToken(refreshToken!, ipAddress);
+            await AddAccessToken2BlackList(accessToken);
         }
         #endregion
 
@@ -162,7 +165,7 @@ namespace Infrastructure.Services.Implementations
             var token = _refreshTokenDbSet
                 .Include(rt => rt.User)
                 .FirstOrDefault(
-                    rt => rt.Token == refreshToken && rt.RevokedAt != null && rt.Expiry > DateTime.UtcNow
+                    rt => rt.Token == refreshToken && rt.RevokedAt == null && rt.Expiry > DateTime.UtcNow
                 );
 
             if (token == null || token.User == null)
@@ -188,6 +191,180 @@ namespace Infrastructure.Services.Implementations
         }
         #endregion
 
+        #region Change password
+        public async Task ChangePassword(
+            Guid currentUserId,
+            ChangePasswordRequest req
+        )
+        {
+            if (req.NewPassword != req.PasswordConfirm)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_CONFIRM_IS_NOT_MATCH
+                );
+            }
+
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.User.Id == currentUserId);
+
+            if (account == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.InternalServerError,
+                    HttpExceptionMessages.INTERNAL_SERVER_ERROR
+                );
+            }
+
+            if (!MD5Algorithm.VerifyMd5Hash(req.OldPassword, account.Password))
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_IS_NOT_CORRECT
+                );
+            }
+
+            account.Password = MD5Algorithm.HashMd5(req.NewPassword);
+            account.PasswordChangedAt = DateTime.UtcNow;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Reset password
+
+        #region Generate reset password token
+        public async Task GenerateResetPasswordToken(GenerateResetPasswordTokenRequest req, string domain)
+        {
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == req.Email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            var resetPasswordToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            account.ResetPasswordToken = resetPasswordToken;
+            account.ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+
+            var mailRequest = new MailRequest
+            {
+                Receiver = account.Email,
+                Subject = "Reset password",
+                Body = $"<p>Hi {account.User.FullName},</p>" +
+                    $"<p>Please click the link below to reset your password:</p>" +
+                    $"<p><a href=\"{domain}/reset-password?token={resetPasswordToken}\">Reset password</a></p>" +
+                    $"<p>If you did not request this, please ignore this email.</p>" +
+                    $"<p>Thanks,</p>" +
+                    $"<p>HRMS Team</p>"
+            };
+
+            await _mailService.SendEmailAsync(mailRequest);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Validate reset password token
+        public async Task<Account> VerifyResetPasswordToken(string token)
+        {
+            var account = await _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.ResetPasswordToken == token);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_RESET_PASSWORD_TOKEN
+                );
+            }
+
+            if (account.ResetPasswordTokenExpiresAt < DateTime.UtcNow)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.RESET_PASSWORD_TOKEN_EXPIRED
+                );
+            }
+
+            return account;
+        }
+        #endregion
+
+        #region Reset password
+        public async Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req)
+        {
+            var account = await VerifyResetPasswordToken(resetPasswordToken);
+
+            if (req.NewPassword != req.PasswordConfirm)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.PASSWORD_CONFIRM_IS_NOT_MATCH
+                );
+            }
+
+            account.Password = MD5Algorithm.HashMd5(req.NewPassword);
+            account.PasswordChangedAt = DateTime.UtcNow;
+            account.ResetPasswordToken = null;
+            account.ResetPasswordTokenExpiresAt = null;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        #endregion
+
+        #endregion
+
+        #region Oauth google
+        public async Task<(string, RefreshToken)> OAuthGoogle(
+            string token,
+            string ipAddress
+        )
+        {
+            var googleProfile = await GetGoogleProfile(token);
+
+            var account = _accountDbSet
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Email == googleProfile.email);
+
+            if (account == null || account.User == null)
+            {
+                throw new AppException(
+                    HttpStatusCode.BadRequest,
+                    HttpExceptionMessages.INVALID_EMAIL
+                );
+            }
+
+            List<Claim> claims = new()
+            {
+                new Claim(ClaimTypes.Sid, account.User.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim(
+                    JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64
+                ),
+                new Claim(ClaimTypes.Name, account.User.FullName)
+            };
+
+            var accessToken = Jwt.GenerateToken(claims, _secretKey);
+            var refreshToken = GenerateRefreshToken(account.User, ipAddress);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return (accessToken, refreshToken);
+        }
+        #endregion
+
         #region Helpers
         public bool IsTokenInBlackList(string token)
         {
@@ -196,7 +373,31 @@ namespace Infrastructure.Services.Implementations
             return blToken != null;
         }
 
-        private void RevokeRefreshToken(string token, string ipAddress)
+        public bool IsPasswordChangedAfterTokenIssued(string token)
+        {
+            try
+            {
+                var jwt = new JwtSecurityToken(token);
+                var userId = Guid.Parse(jwt.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
+                var account = _accountDbSet.FirstOrDefault(a => a.User.Id == userId);
+
+                if (account == null)
+                {
+                    throw new AppException(
+                        HttpStatusCode.InternalServerError,
+                        HttpExceptionMessages.INTERNAL_SERVER_ERROR
+                    );
+                }
+
+                return account.PasswordChangedAt > jwt.IssuedAt;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task RevokeRefreshToken(string token, string ipAddress)
         {
             var refreshToken = _refreshTokenDbSet.FirstOrDefault(rt => rt.Token == token);
 
@@ -207,6 +408,8 @@ namespace Infrastructure.Services.Implementations
 
             refreshToken.RevokedAt = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
+
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private RefreshToken GenerateRefreshToken(User user, string ipAddress)
@@ -224,7 +427,7 @@ namespace Infrastructure.Services.Implementations
             return refreshToken;
         }
 
-        private void AddAccessToken2BlackList(string token)
+        public async Task AddAccessToken2BlackList(string token)
         {
             var blackListToken = new BlackListToken
             {
@@ -233,6 +436,7 @@ namespace Infrastructure.Services.Implementations
             };
 
             _blackListTokenDbSet.Add(blackListToken);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private async Task<GoogleProfile> GetGoogleProfile(string token)

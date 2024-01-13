@@ -22,5 +22,11 @@ public class Account : BaseEntity
 
     public string Password { get; set; } = string.Empty;
 
+    public DateTime PasswordChangedAt { get; set; } = DateTime.UtcNow;
+
+    public string? ResetPasswordToken { get; set; } = null;
+
+    public DateTime? ResetPasswordTokenExpiresAt { get; set; } = null;
+
     public string State { get; set; } = ACTIVATED;
 }

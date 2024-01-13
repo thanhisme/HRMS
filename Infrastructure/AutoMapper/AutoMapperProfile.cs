@@ -1,10 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
-using Infrastructure.Models.RequestModels.Assignment;
 using Infrastructure.Models.RequestModels.Auth;
-using Infrastructure.Models.RequestModels.Permission;
-using Infrastructure.Models.RequestModels.PermissionGroup;
-using Infrastructure.Models.RequestModels.Position;
 
 namespace Infrastructure.AutoMapper
 {

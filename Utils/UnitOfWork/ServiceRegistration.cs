@@ -7,7 +7,7 @@ namespace Utils.UnitOfWork
     {
         public static IServiceCollection RegisterUnitOfWork(this IServiceCollection services)
         {
-            services.AddScoped<IUnitOfWork, Implementations.UnitOfWork>();
+            services.AddTransient<IUnitOfWork, Implementations.UnitOfWork>();
 
             return services;
         }

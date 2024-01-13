@@ -4,6 +4,7 @@ using Infrastructure.Models.ResponseModels.Auth;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Utils.Annotations.Authorization;
 using Utils.HelperFuncs;
 using Utils.HttpResponseModels;
@@ -44,6 +45,18 @@ namespace HRMS.Controllers
             return SuccessResponse(response);
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<TokensResponse>>> OAuthGoogle([FromBody] OAuthRequest req)
+        {
+            var (accessToken, refreshToken) = await _authService.OAuthGoogle(req.Token, GetIpAddress());
+            var userAgent = GetUserAgent();
+            var response = HandleResponseBasedOnDevice(userAgent, accessToken, refreshToken);
+
+            return SuccessResponse(response);
+        }
+
         [HttpGet]
         [AllowAnonymous]
         [AnonymousOnly]
@@ -70,6 +83,46 @@ namespace HRMS.Controllers
             string accessToken = bearerToken["Bearer ".Length..];
 
             await _authService.SignOut(refreshToken, accessToken, accessToken);
+
+            return SuccessResponse(true);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult<HttpResponse<bool>>> ChangePassword(ChangePasswordRequest req)
+        {
+            await _authService.ChangePassword(Guid.Parse(User.FindFirst(ClaimTypes.Sid).Value), req);
+
+            return SuccessResponse(true);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> GenerateResetPasswordToken([FromBody] GenerateResetPasswordTokenRequest req)
+        {
+            var domain = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+            await _authService.GenerateResetPasswordToken(req, domain);
+
+            return SuccessResponse(true);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> VerifyResetPasswordToken([FromQuery] string token)
+        {
+            var account = await _authService.VerifyResetPasswordToken(token);
+
+            return SuccessResponse(account != null);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [AnonymousOnly]
+        public async Task<ActionResult<HttpResponse<bool>>> ResetPassword([FromQuery] string token, ResetPasswordRequest req)
+        {
+            await _authService.ResetPassword(token, req);
 
             return SuccessResponse(true);
         }
