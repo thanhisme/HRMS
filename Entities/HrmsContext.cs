@@ -56,6 +56,12 @@ namespace Entities
                 .HasForeignKey(c => c.PartnerBId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<WorkingInfo>()
+                .HasOne(wi => wi.Employee)
+                .WithMany(u => u.WorkingInfos)
+                .HasForeignKey(wi => wi.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             base.OnModelCreating(modelBuilder);
         }
     }

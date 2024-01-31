@@ -76,8 +76,10 @@ namespace Entities
 
         public string University { get; set; } = string.Empty;
 
-        public List<Attachment> Certificates { get; set; } = new List<Attachment>();
+        public virtual List<Attachment> Certificates { get; set; } = new List<Attachment>();
 
         public DateTime GraduationDate { get; set; } = DateTime.UtcNow;
+
+        public virtual List<WorkingInfo> WorkingInfos { get; set; } = new List<WorkingInfo>();
     }
 }
