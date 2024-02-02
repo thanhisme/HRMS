@@ -1,12 +1,10 @@
-﻿using Entities;
+﻿using Infrastructure.Models.RequestModels.User;
 using Infrastructure.Models.ResponseModels.User;
 
 namespace Infrastructure.Services.Interfaces
 {
     public interface IUserService
     {
-        public User? GetById(Guid id);
-
-        public List<UserResponse> GetMany();
+        public Task<(int, List<UserResponse>)> GetMany(UserFilterRequest req);
     }
 }
