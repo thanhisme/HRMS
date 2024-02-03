@@ -1,4 +1,6 @@
-﻿using Infrastructure;
+﻿using HRMS.Middlewares;
+using Infrastructure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
@@ -24,6 +26,10 @@ namespace HRMS
             services.RegisterAuthentication(configuration);
 
             services.RegisterSwagger();
+
+            services.RegisterClaimTransformation();
+
+            services.RegisterAuthorization();
 
             return services;
         }
@@ -62,6 +68,30 @@ namespace HRMS
                         }
                     };
                 });
+
+            return services;
+        }
+
+        private static IServiceCollection RegisterClaimTransformation(this IServiceCollection services)
+        {
+            services.AddTransient<IClaimsTransformation, ClaimsTransformer>();
+
+            return services;
+        }
+
+        private static IServiceCollection RegisterAuthorization(this IServiceCollection services)
+        {
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Permission:Admin", policy =>
+                {
+                    policy.RequireAssertion(context =>
+                    {
+                        var claims = context.User.Claims.ToList();
+                        return context.User.Claims.Any(c => c.Type.StartsWith("Permission:Admin"));
+                    });
+                });
+            });
 
             return services;
         }

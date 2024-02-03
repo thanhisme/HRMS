@@ -32,6 +32,8 @@ app.UseMiddleware<ProtectedMiddleware>();
 
 app.UseAuthentication();
 
+app.UseMiddleware<ClaimsTransformerMiddleware>();
+
 app.UseAuthorization();
 
 // authentication Token
