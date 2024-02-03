@@ -34,6 +34,14 @@ namespace Entities
 
         public virtual DbSet<RewardFineHistory> RewardFineHistories { get; set; }
 
+        public virtual DbSet<WorkingInfo> WorkingInfos { get; set; }
+
+        public virtual DbSet<Permission> Permissions { get; set; }
+
+        public virtual DbSet<Role> Roles { get; set; }
+
+        public virtual DbSet<UserRole> UserRoles { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             base.OnConfiguring(optionsBuilder);
 
