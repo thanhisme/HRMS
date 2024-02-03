@@ -1,5 +1,7 @@
-﻿using Infrastructure.Models.ResponseModels.User;
+﻿using Infrastructure.Models.RequestModels.User;
+using Infrastructure.Models.ResponseModels.User;
 using Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Utils.HttpResponseModels;
 
@@ -16,12 +18,13 @@ namespace HRMS.Controllers
             _userService = userService;
         }
 
+        [Authorize(Policy = "Permission:Admin")]
         [HttpGet]
-        public ActionResult<HttpResponse<List<UserResponse>>> GetMany()
+        public async Task<ActionResult<HttpResponse<List<UserResponse>>>> GetMany([FromQuery] UserFilterRequest req)
         {
-            var users = _userService.GetMany();
+            var (totalRecords, users) = await _userService.GetMany(req);
 
-            return SuccessResponse(users);
+            return SuccessResponse(totalRecords, users);
         }
     }
 }
