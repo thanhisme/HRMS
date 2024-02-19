@@ -6,5 +6,25 @@ namespace Infrastructure.Services.Interfaces
     public interface IUserService
     {
         public Task<(int, List<UserResponse>)> GetMany(UserFilterRequest req);
+
+        public Task<UserResponse> GetEmployeeProfile(string employeeCode);
+
+        public Task<UserResponse> GetProfile(Guid userId);
+
+        //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
+
+        //public Task LockAccount(string employeeCode);
+
+        //public Task UnlockAccount(string employeeCode);
+
+        //public Task UpdateUser(UserUpdateRequest req);
+
+        //public Task DeleteUser(string employeeCode);
+
+        //public Task GetCareerPath(string employeeCode);
+
+        //public Task GetCurrentSalaryDetail(string employeeCode);
+
+        ///public Task GetSalaryHistory(string employeeCode);
     }
 }

@@ -13,5 +13,7 @@
         public string Department { get; set; }
 
         public Guid DepartmentId { get; set; }
+
+        public string Avatar { get; set; }
     }
 }

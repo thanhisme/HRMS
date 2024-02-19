@@ -5,7 +5,10 @@ using Infrastructure.Models.ResponseModels.User;
 using Infrastructure.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Net;
+using Utils.Constants.Strings;
 using Utils.HelperFuncs;
+using Utils.HttpResponseModels;
 using Utils.UnitOfWork.Interfaces;
 
 namespace Infrastructure.Services.Implementations
@@ -64,6 +67,50 @@ namespace Infrastructure.Services.Implementations
                 .ToList();
 
             return (result.Count, result.Skip((req.Page - 1) * req.PageSize).Take(req.PageSize).ToList());
+        }
+        #endregion
+
+        #region Get employee profile
+        public async Task<UserResponse> GetEmployeeProfile(string employeeCode)
+        {
+            var employee = await _unitOfWork
+                .Repository<User>()
+                .Include(e => e.WorkingInfos)
+                .ThenInclude(w => w.Department)
+                .Include(e => e.WorkingInfos)
+                .ThenInclude(w => w.Position)
+                .Where(e => e.EmployeeCode == employeeCode)
+                .FirstOrDefaultAsync()
+                ?? throw new AppException(HttpStatusCode.NotFound, HttpExceptionMessages.NOT_FOUND);
+
+            return new UserResponse
+            {
+                Id = employee.Id,
+                FullName = employee.FullName,
+                EmployeeCode = employee.EmployeeCode,
+            };
+        }
+        #endregion
+
+        #region Get current user profile
+        public async Task<UserResponse> GetProfile(Guid userId)
+        {
+            var profile = await _userRepository
+                .Include(u => u.WorkingInfos)
+                .ThenInclude(w => w.Department)
+                .Include(u => u.WorkingInfos)
+                .ThenInclude(w => w.Position)
+                .Where(u => u.Id == userId)
+                .FirstOrDefaultAsync()
+                ?? throw new AppException(HttpStatusCode.NotFound, HttpExceptionMessages.NOT_FOUND);
+
+            return new UserResponse
+            {
+                Id = profile.Id,
+                FullName = profile.FullName,
+                EmployeeCode = profile.EmployeeCode,
+                Avatar = profile.Avatar
+            };
         }
         #endregion
     }
