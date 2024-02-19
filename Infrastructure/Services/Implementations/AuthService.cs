@@ -13,6 +13,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Web;
 using Utils.Constants.Strings;
 using Utils.HelperFuncs;
 using Utils.HttpResponseModels;
@@ -261,7 +262,7 @@ namespace Infrastructure.Services.Implementations
                 Subject = "Reset password",
                 Body = $"<p>Hi {account.User.FullName},</p>" +
                     $"<p>Please click the link below to reset your password:</p>" +
-                    $"<p><a href=\"{domain}/reset-password?token={resetPasswordToken}\">Reset password</a></p>" +
+                    $"<p><a href=\"{domain}auth/reset-password?token={HttpUtility.UrlEncode(resetPasswordToken)}\">Reset password</a></p>" +
                     $"<p>If you did not request this, please ignore this email.</p>" +
                     $"<p>Thanks,</p>" +
                     $"<p>HRMS Team</p>"
@@ -300,9 +301,9 @@ namespace Infrastructure.Services.Implementations
         #endregion
 
         #region Reset password
-        public async Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req)
+        public async Task ResetPassword(ResetPasswordRequest req)
         {
-            var account = await VerifyResetPasswordToken(resetPasswordToken);
+            var account = await VerifyResetPasswordToken(req.ResetToken);
 
             if (req.NewPassword != req.PasswordConfirm)
             {
@@ -343,6 +344,8 @@ namespace Infrastructure.Services.Implementations
                     HttpExceptionMessages.INVALID_EMAIL
                 );
             }
+
+            account.User.Avatar = googleProfile.picture;
 
             List<Claim> claims = new()
             {

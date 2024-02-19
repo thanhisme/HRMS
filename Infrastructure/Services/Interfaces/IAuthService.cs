@@ -27,7 +27,7 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<Account> VerifyResetPasswordToken(string token);
 
-        public Task ResetPassword(string resetPasswordToken, ResetPasswordRequest req);
+        public Task ResetPassword(ResetPasswordRequest req);
 
         public Task<(string, RefreshToken)> OAuthGoogle(string token, string ipAddress);
     }

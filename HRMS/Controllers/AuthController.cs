@@ -101,18 +101,18 @@ namespace HRMS.Controllers
         [AnonymousOnly]
         public async Task<ActionResult<HttpResponse<bool>>> GenerateResetPasswordToken([FromBody] GenerateResetPasswordTokenRequest req)
         {
-            var domain = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+            var domain = $"{Request.Headers["Referer"]}";
             await _authService.GenerateResetPasswordToken(req, domain);
 
             return SuccessResponse(true);
         }
 
-        [HttpGet]
+        [HttpPost]
         [AllowAnonymous]
         [AnonymousOnly]
-        public async Task<ActionResult<HttpResponse<bool>>> VerifyResetPasswordToken([FromQuery] string token)
+        public async Task<ActionResult<HttpResponse<bool>>> VerifyResetPasswordToken([FromBody] VerifyResetPasswordTokenRequest req)
         {
-            var account = await _authService.VerifyResetPasswordToken(token);
+            var account = await _authService.VerifyResetPasswordToken(req.Token);
 
             return SuccessResponse(account != null);
         }
@@ -120,9 +120,9 @@ namespace HRMS.Controllers
         [HttpPost]
         [AllowAnonymous]
         [AnonymousOnly]
-        public async Task<ActionResult<HttpResponse<bool>>> ResetPassword([FromQuery] string token, ResetPasswordRequest req)
+        public async Task<ActionResult<HttpResponse<bool>>> ResetPassword(ResetPasswordRequest req)
         {
-            await _authService.ResetPassword(token, req);
+            await _authService.ResetPassword(req);
 
             return SuccessResponse(true);
         }
