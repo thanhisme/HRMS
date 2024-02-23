@@ -42,6 +42,8 @@ namespace Entities
 
         public virtual DbSet<UserRole> UserRoles { get; set; }
 
+        public virtual DbSet<Timekeeping> Timekeepings { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             base.OnConfiguring(optionsBuilder);
 
