@@ -45,5 +45,14 @@ namespace HRMS.Controllers
 
             return SuccessResponse(user);
         }
+
+        [AllowAnonymous]
+        [HttpGet("pie-chart-statistics-employee-by-department")]
+        public async Task<ActionResult<HttpResponse<List<PieChartStatisticsEmployeeByDepartmentItem>>>> GetEmployeeProfile()
+        {
+            var result = await _userService.PieChartStatisticsEmployeeByDepartment();
+
+            return SuccessResponse(result);
+        }
     }
 }

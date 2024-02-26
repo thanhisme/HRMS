@@ -11,6 +11,8 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<UserResponse> GetProfile(Guid userId);
 
+        public Task<List<PieChartStatisticsEmployeeByDepartmentItem>> PieChartStatisticsEmployeeByDepartment();
+
         //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
 
         //public Task LockAccount(string employeeCode);

@@ -113,5 +113,54 @@ namespace Infrastructure.Services.Implementations
             };
         }
         #endregion
+
+        #region Get statistics employee (pie chart - group by department)
+        public async Task<List<PieChartStatisticsEmployeeByDepartmentItem>> PieChartStatisticsEmployeeByDepartment()
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new List<PieChartStatisticsEmployeeByDepartmentItem>()
+            {
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận quản lí",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận Backend",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận Frontend",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận Tester",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận Mobile",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận BA",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByDepartmentItem()
+                {
+                    DepartmentName = "Bộ phận Lễ Tân",
+                    TotalCount = random.Next(min, max)
+                },
+            };
+        }
+        #endregion
     }
 }
