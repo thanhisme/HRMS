@@ -162,5 +162,44 @@ namespace Infrastructure.Services.Implementations
             };
         }
         #endregion
+
+        #region Get statistics employee (pie chart - group by type)
+        public async Task<List<PieChartStatisticsEmployeeByTypeItem>> PieChartStatisticsEmployeeByType()
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new List<PieChartStatisticsEmployeeByTypeItem>()
+            {
+                new PieChartStatisticsEmployeeByTypeItem()
+                {
+                    TypeName = "Thử việc",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByTypeItem()
+                {
+                    TypeName = "Chính thức",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByTypeItem()
+                {
+                    TypeName = "Thời vụ",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByTypeItem()
+                {
+                    TypeName = "Thực tập",
+                    TotalCount = random.Next(min, max)
+                },
+                new PieChartStatisticsEmployeeByTypeItem()
+                {
+                    TypeName = "Bán thời gian",
+                    TotalCount = random.Next(min, max)
+                }
+            };
+        }
+        #endregion
     }
 }

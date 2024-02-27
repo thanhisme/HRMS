@@ -13,6 +13,8 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<List<PieChartStatisticsEmployeeByDepartmentItem>> PieChartStatisticsEmployeeByDepartment();
 
+        public Task<List<PieChartStatisticsEmployeeByTypeItem>> PieChartStatisticsEmployeeByType();
+
         //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
 
         //public Task LockAccount(string employeeCode);
