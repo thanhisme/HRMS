@@ -63,5 +63,14 @@ namespace HRMS.Controllers
 
             return SuccessResponse(result);
         }
+
+        [AllowAnonymous]
+        [HttpGet("line-chart-statistics-personnel-changes")]
+        public async Task<ActionResult<HttpResponse<List<LineChartStatisticsPersonnelChanges>>>> GetLineChartStatisticsPersonnelChanges([FromQuery] string year)
+        {
+            var result = await _userService.LineChartStatisticsPersonnelChanges(year);
+
+            return SuccessResponse(result);
+        }
     }
 }

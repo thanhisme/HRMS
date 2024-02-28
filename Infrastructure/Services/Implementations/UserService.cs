@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
+using Infrastructure.Models.CommonModels;
 using Infrastructure.Models.RequestModels.User;
 using Infrastructure.Models.ResponseModels.User;
 using Infrastructure.Services.Interfaces;
@@ -199,6 +200,197 @@ namespace Infrastructure.Services.Implementations
                     TotalCount = random.Next(min, max)
                 }
             };
+        }
+        #endregion
+
+        #region Get statistics employee (line chart - personnel changes)
+        public async Task<List<LineChartStatisticsPersonnelChanges>> LineChartStatisticsPersonnelChanges(string year)
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new List<LineChartStatisticsPersonnelChanges>()
+            {
+                new LineChartStatisticsPersonnelChanges
+                {
+                    Title = "Tiếp nhận",
+                    Items = new List<LineChartStatisticsPersonnelChangesItem>
+                    {
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T1",
+                            Month = "Tháng 1",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T2",
+                            Month = "Tháng 2",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T3",
+                            Month = "Tháng 3",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T4",
+                            Month = "Tháng 4",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T5",
+                            Month = "Tháng 5",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T6",
+                            Month = "Tháng 6",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T7",
+                            Month = "Tháng 7",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T8",
+                            Month = "Tháng 8",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T9",
+                            Month = "Tháng 9",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T10",
+                            Month = "Tháng 10",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T11",
+                            Month = "Tháng 11",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T12",
+                            Month = "Tháng 12",
+                            Total = random.Next(min, max)
+                        },
+                    }
+                },
+                new LineChartStatisticsPersonnelChanges
+                {
+                    Title = "Nghỉ việc",
+                    Items = new List<LineChartStatisticsPersonnelChangesItem>
+                    {
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T1",
+                            Month = "Tháng 1",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T2",
+                            Month = "Tháng 2",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T3",
+                            Month = "Tháng 3",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T4",
+                            Month = "Tháng 4",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T5",
+                            Month = "Tháng 5",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T6",
+                            Month = "Tháng 6",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T7",
+                            Month = "Tháng 7",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T8",
+                            Month = "Tháng 8",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T9",
+                            Month = "Tháng 9",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T10",
+                            Month = "Tháng 10",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T11",
+                            Month = "Tháng 11",
+                            Total = random.Next(min, max)
+                        },
+                        new LineChartStatisticsPersonnelChangesItem()
+                        {
+                            MonthCode = "T12",
+                            Month = "Tháng 12",
+                            Total = random.Next(min, max)
+                        },
+                    }
+                }
+            };
+        }
+        #endregion
+
+        #region Helpers
+        private static List<MonthsOfYear> GetMonthsOfYear(int year)
+        {
+            var result = new List<MonthsOfYear>();
+
+            for (int month = 1 ; month <= 12 ; month++)
+            {
+                result.Add(new MonthsOfYear()
+                {
+                    MonthId = month,
+                    MonthCode = $"T{month}",
+                    Month = $"Tháng {month}",
+                });
+            }
+
+            return result;
         }
         #endregion
     }
