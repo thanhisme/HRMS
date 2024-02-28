@@ -72,5 +72,14 @@ namespace HRMS.Controllers
 
             return SuccessResponse(result);
         }
+
+        [AllowAnonymous]
+        [HttpGet("bar-chart-statistics-employee")]
+        public async Task<ActionResult<HttpResponse<List<BarChartStatisticsTotalEmployeeItem>>>> GetBarChartStatisticsEmployee([FromQuery] string year)
+        {
+            var result = await _userService.BarChartStatisticsEmployee(year);
+
+            return SuccessResponse(result);
+        }
     }
 }

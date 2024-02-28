@@ -17,6 +17,8 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<List<LineChartStatisticsPersonnelChanges>> LineChartStatisticsPersonnelChanges(string year);
 
+        public Task<List<BarChartStatisticsTotalEmployeeItem>> BarChartStatisticsEmployee(string year);
+
         //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
 
         //public Task LockAccount(string employeeCode);
