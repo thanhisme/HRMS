@@ -1,4 +1,5 @@
-﻿using Infrastructure.Models.RequestModels.User;
+﻿using Infrastructure.Models.CommonModels;
+using Infrastructure.Models.RequestModels.User;
 using Infrastructure.Models.ResponseModels.User;
 
 namespace Infrastructure.Services.Interfaces
@@ -18,6 +19,8 @@ namespace Infrastructure.Services.Interfaces
         public Task<List<LineChartStatisticsPersonnelChanges>> LineChartStatisticsPersonnelChanges(string year);
 
         public Task<List<BarChartStatisticsTotalEmployeeItem>> BarChartStatisticsEmployee(string year);
+
+        public Task<NumberStatistics> NumberStatisticsTotalEmployee(DateFilterWithPrev req);
 
         //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
 

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Models.RequestModels.User;
+﻿using Infrastructure.Models.CommonModels;
+using Infrastructure.Models.RequestModels.User;
 using Infrastructure.Models.ResponseModels.User;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -78,6 +79,15 @@ namespace HRMS.Controllers
         public async Task<ActionResult<HttpResponse<List<BarChartStatisticsTotalEmployeeItem>>>> GetBarChartStatisticsEmployee([FromQuery] string year)
         {
             var result = await _userService.BarChartStatisticsEmployee(year);
+
+            return SuccessResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("number-statistics-total-employee")]
+        public async Task<ActionResult<HttpResponse<NumberStatistics>>> GetNumberStatisticsTotalEmployee([FromQuery] DateFilterWithPrev req)
+        {
+            var result = await _userService.NumberStatisticsTotalEmployee(req);
 
             return SuccessResponse(result);
         }

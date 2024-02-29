@@ -461,6 +461,22 @@ namespace Infrastructure.Services.Implementations
         }
         #endregion
 
+        #region Get statistics employee (number - total employee)
+        public async Task<NumberStatistics> NumberStatisticsTotalEmployee(DateFilterWithPrev req)
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new NumberStatistics
+            {
+                CurrentUnitTotal = random.Next(min, max),
+                PreviousUnitTotal = random.Next(min, max)
+            };
+        }
+        #endregion
+
         #region Helpers
         private static List<MonthsOfYear> GetMonthsOfYear(int year)
         {
