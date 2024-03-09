@@ -91,5 +91,32 @@ namespace HRMS.Controllers
 
             return SuccessResponse(result);
         }
+
+        [AllowAnonymous]
+        [HttpGet("number-statistics-quit-employee")]
+        public async Task<ActionResult<HttpResponse<NumberStatistics>>> GetNumberStatisticsQuitEmployee([FromQuery] DateFilterWithPrev req)
+        {
+            var result = await _userService.NumberStatisticsQuitEmployee(req);
+
+            return SuccessResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("number-statistics-probation-employee")]
+        public async Task<ActionResult<HttpResponse<NumberStatistics>>> GetNumberStatisticsProbationEmployee([FromQuery] DateFilterWithPrev req)
+        {
+            var result = await _userService.NumberStatisticsProbationEmployee(req);
+
+            return SuccessResponse(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("number-statistics-new-employee")]
+        public async Task<ActionResult<HttpResponse<NumberStatistics>>> GetNumberStatisticsNewEmployee([FromQuery] DateFilterWithPrev req)
+        {
+            var result = await _userService.NumberStatisticsNewEmployee(req);
+
+            return SuccessResponse(result);
+        }
     }
 }
