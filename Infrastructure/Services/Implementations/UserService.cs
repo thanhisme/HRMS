@@ -477,6 +477,54 @@ namespace Infrastructure.Services.Implementations
         }
         #endregion
 
+        #region Get statistics employee (number - quit employee)
+        public async Task<NumberStatistics> NumberStatisticsQuitEmployee(DateFilterWithPrev req)
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new NumberStatistics
+            {
+                CurrentUnitTotal = random.Next(min, max),
+                PreviousUnitTotal = random.Next(min, max)
+            };
+        }
+        #endregion
+
+        #region Get statistics employee (number - probation employee)
+        public async Task<NumberStatistics> NumberStatisticsProbationEmployee(DateFilterWithPrev req)
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new NumberStatistics
+            {
+                CurrentUnitTotal = random.Next(min, max),
+                PreviousUnitTotal = random.Next(min, max)
+            };
+        }
+        #endregion
+
+        #region Get statistics employee (number - new employee)
+        public async Task<NumberStatistics> NumberStatisticsNewEmployee(DateFilterWithPrev req)
+        {
+            Random random = new();
+            int min = 0;
+            int max = 100;
+            await _userRepository.FirstOrDefaultAsync();
+
+            return new NumberStatistics
+            {
+                CurrentUnitTotal = random.Next(min, max),
+                PreviousUnitTotal = random.Next(min, max)
+            };
+        }
+        #endregion
+
         #region Helpers
         private static List<MonthsOfYear> GetMonthsOfYear(int year)
         {

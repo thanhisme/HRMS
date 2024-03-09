@@ -22,6 +22,12 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<NumberStatistics> NumberStatisticsTotalEmployee(DateFilterWithPrev req);
 
+        public Task<NumberStatistics> NumberStatisticsQuitEmployee(DateFilterWithPrev req);
+
+        public Task<NumberStatistics> NumberStatisticsProbationEmployee(DateFilterWithPrev req);
+
+        public Task<NumberStatistics> NumberStatisticsNewEmployee(DateFilterWithPrev req);
+
         //public Task<(int, List<UserResponse>)> GetLockedAccount(UserFilterRequest req);
 
         //public Task LockAccount(string employeeCode);
