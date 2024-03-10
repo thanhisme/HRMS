@@ -49,6 +49,7 @@ namespace Infrastructure
             services.AddTransient<IAuthService, AuthService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IMailService, MailService>();
+            services.AddTransient<IReminderService, ReminderService>();
             //services.AddTransient<IFileService, FileService>();
 
             return services;
