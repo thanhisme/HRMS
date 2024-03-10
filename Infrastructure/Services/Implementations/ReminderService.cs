@@ -236,55 +236,55 @@ namespace Infrastructure.Services.Implementations
                 {
                     EmployeeName = "Nhân viên " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên  " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên  " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên  " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên  " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
                 new EmployeeWithBirthdateThisMonthItem()
                 {
                     EmployeeName = "Nhân viên " + random.Next(1,10),
                     Avatar = "https://lh3.googleusercontent.com/a/ACg8ocKAA8sayFXATU1rOjp8aUhlYRUlv1kSQDja4sE6xuRVPs0=s96-c",
-                    DateOfBirth = DateTime.Today.AddDays( random.Next(12, 100) ),
+                    DateOfBirth = DateTime.Today.AddYears(-1 * random.Next(12, 50)).AddDays( random.Next(12, 100) ),
                 },
             };
 
